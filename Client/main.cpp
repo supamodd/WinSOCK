@@ -9,7 +9,7 @@
 #include<iphlpapi.h>
 using namespace std;
 
-#pragma comment(lib, "WS2_32.lib")	//подгружает реализации фукций из статической библиотеки для <WS2TCPIP.h>
+#pragma comment(lib, "WS2_32.lib")
 
 #define MTU		1500
 
@@ -18,7 +18,7 @@ VOID Receive(SOCKET connect_socket);
 void main()
 {
 	setlocale(LC_ALL, "");
-	INT iResult = 0;	//эта переменная нужна для отслеживания результатов выполнения функций.
+	INT iResult = 0;	
 	//1) Инициализация WinSOCK:
 	WSADATA wsaData;
 	iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);	//MAKEWORD(2,2) - выбираем версию WinSOCK
@@ -36,7 +36,7 @@ void main()
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = IPPROTO_TCP;
 
-	iResult = getaddrinfo("127.0.0.1", "27015", &hints, &target);//По символьному имени получает числовой адрес целевого узла (IP-адрес)
+	iResult = getaddrinfo("127.0.0.1", "27015", &hints, &target);
 	if (iResult != 0)
 	{
 		cout << "getaddrinfo failed with error " << iResult << endl;

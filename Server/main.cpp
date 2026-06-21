@@ -153,16 +153,37 @@ VOID ClientHandle(SOCKET client_socket)
 {
 	INT iResult = 0;
 	CHAR send_buffer[MTU] = "Hello Client!!!";
-	CHAR recv_buffer[MTU] = {};
+	CHAR recv_buffer[MTU + 1] = {};
+	CHAR broadcast_buffer[MTU + 64] = {};
+
+	// Узнаем IP-адрес и порт клиента-отправителя по его сокету.
+	SOCKADDR_IN sender_addr;
+	INT sender_addrlen = sizeof(sender_addr);
+	CHAR sender_ip[16] = {};
+	USHORT sender_port = 0;
+
+	ZeroMemory(&sender_addr, sizeof(sender_addr));
+	if (getpeername(client_socket, (SOCKADDR*)&sender_addr, &sender_addrlen) == 0)
+	{
+		strcpy_s(sender_ip, inet_ntoa(sender_addr.sin_addr));
+		sender_port = ntohs(sender_addr.sin_port);
+	}
+	else
+	{
+		strcpy_s(sender_ip, "unknown");
+	}
 
 	do
 	{
-		ZeroMemory(recv_buffer, MTU);
+		ZeroMemory(recv_buffer, sizeof(recv_buffer));
 		iResult = recv(client_socket, recv_buffer, MTU, 0);
 		if (iResult > 0)
 		{
-			cout << iResult << " Bytes received, Message: " << recv_buffer << endl;
-			Broadcast(recv_buffer);
+			recv_buffer[iResult] = '\0';
+			sprintf_s(broadcast_buffer, "[%s:%hu] %s", sender_ip, sender_port, recv_buffer);
+
+			cout << iResult << " Bytes received from " << sender_ip << ":" << sender_port << ", Message: " << recv_buffer << endl;
+			Broadcast(broadcast_buffer);
 			/*INT iSendResult = send(client_socket, recv_buffer, strlen(send_buffer), 0);
 			if (iSendResult == SOCKET_ERROR)
 			{
