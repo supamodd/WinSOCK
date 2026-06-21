@@ -106,7 +106,6 @@ void main()
 }
 VOID Receive(SOCKET connect_socket)
 {
-	//6) Получение данных от Сервера:
 	INT iResult = 0;
 	CHAR recv_buffer[MTU] = {/*initializer_list*/ };
 	do
