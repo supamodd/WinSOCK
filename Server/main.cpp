@@ -1,4 +1,5 @@
 ﻿#define _WINSOCK_DEPRECATED_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -142,48 +143,37 @@ VOID Shift(INT index)
 	hThreads[MAX_CONNECTIONS - 1] = NULL;
 	g_ActiveClients--;
 }
-VOID Broadcast(CHAR sz_message[])
+VOID Broadcast(CHAR sz_message[], DWORD dwID)
 {
 	for (INT i = 0; i < g_ActiveClients; i++)
 	{
-		send(clients[i], sz_message, strlen(sz_message), 0);
+		if (dwThreadIDs[i] != dwID)send(clients[i], sz_message, strlen(sz_message), 0);
 	}
 }
 VOID ClientHandle(SOCKET client_socket)
 {
+	SOCKADDR_IN client_address;
+	client_address.sin_family = AF_INET;
+	INT addrlen = sizeof(client_address);
+	getpeername(client_socket, (SOCKADDR*)&client_address, &addrlen);
+	CHAR sz_client_address[32] = {};
+	//CHAR sz_client_connected[32] = {};
+	sprintf(sz_client_address, "[%s:%d]:\t", inet_ntoa(client_address.sin_addr), ntohs(client_address.sin_port));
+
 	INT iResult = 0;
 	CHAR send_buffer[MTU] = "Hello Client!!!";
-	CHAR recv_buffer[MTU + 1] = {};
-	CHAR broadcast_buffer[MTU + 64] = {};
-
-	// Узнаем IP-адрес и порт клиента-отправителя по его сокету.
-	SOCKADDR_IN sender_addr;
-	INT sender_addrlen = sizeof(sender_addr);
-	CHAR sender_ip[16] = {};
-	USHORT sender_port = 0;
-
-	ZeroMemory(&sender_addr, sizeof(sender_addr));
-	if (getpeername(client_socket, (SOCKADDR*)&sender_addr, &sender_addrlen) == 0)
-	{
-		strcpy_s(sender_ip, inet_ntoa(sender_addr.sin_addr));
-		sender_port = ntohs(sender_addr.sin_port);
-	}
-	else
-	{
-		strcpy_s(sender_ip, "unknown");
-	}
+	CHAR recv_buffer[MTU] = {};
 
 	do
 	{
-		ZeroMemory(recv_buffer, sizeof(recv_buffer));
+		ZeroMemory(recv_buffer, MTU);
+		ZeroMemory(send_buffer, MTU);
 		iResult = recv(client_socket, recv_buffer, MTU, 0);
 		if (iResult > 0)
 		{
-			recv_buffer[iResult] = '\0';
-			sprintf_s(broadcast_buffer, "[%s:%hu] %s", sender_ip, sender_port, recv_buffer);
-
-			cout << iResult << " Bytes received from " << sender_ip << ":" << sender_port << ", Message: " << recv_buffer << endl;
-			Broadcast(broadcast_buffer);
+			sprintf(send_buffer, "%s%s", sz_client_address, recv_buffer);
+			cout /*<< iResult << " Bytes received, Message: " */ << send_buffer << endl;
+			Broadcast(send_buffer, GetCurrentThreadId());
 			/*INT iSendResult = send(client_socket, recv_buffer, strlen(send_buffer), 0);
 			if (iSendResult == SOCKET_ERROR)
 			{
