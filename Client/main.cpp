@@ -41,7 +41,7 @@ void main()
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = IPPROTO_TCP;
 
-	iResult = getaddrinfo("192.168.1.101", "27015", &hints, &target);//По символьному имени получает числовой адрес целевого узла (IP-адрес)
+	iResult = getaddrinfo("127.0.0.1", "27015", &hints, &target);//По символьному имени получает числовой адрес целевого узла (IP-адрес)
 	if (iResult != 0)
 	{
 		cout << "getaddrinfo failed with error " << iResult << endl;
